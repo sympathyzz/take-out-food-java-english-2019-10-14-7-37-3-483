@@ -14,7 +14,56 @@ public class App {
 
     public String bestCharge(List<String> inputs) {
         //TODO: write code here
+        StringBuffer receiptString=new StringBuffer("============= Order details =============\n");
+        List<Item> ALL_ITEMS=itemRepository.findAll();
+        List<SalesPromotion> ALL_SALES_PROMOTIONS=salesPromotionRepository.findAll();
+        int sum=0;
+        for (String s:inputs) {
+            String id=s.substring(0,s.indexOf("x")-1);
+            int num=Integer.parseInt(s.split(" ")[s.split(" ").length-1]);
+            for (Item i:ALL_ITEMS) {
+                if (i.getId().equals(id)){
+                    sum+=i.getPrice()*num;
+                    receiptString.append(i.getName()+" x "+num+" = "+(int)(i.getPrice()*num)+" yuan\n");
+                }
+            }
+        }
+        receiptString.append("-----------------------------------\n");
+        if(inputs.size()==3){
+            receiptString.append("Promotion used:\n");
+            receiptString.append(ALL_SALES_PROMOTIONS.get(1).getDisplayName()+" (");
+            int save=0;
+            for(String s:inputs){
+                String id=s.substring(0,s.indexOf("x")-1);
+                for (String str:ALL_SALES_PROMOTIONS.get(1).getRelatedItems())
+                if (str.equals(id)){
+                    for (Item i:ALL_ITEMS) {
+                        if (str.equals(i.getId())){
+                            save+=(int)(i.getPrice()*0.5);
+                            receiptString.append(i.getName()+"，");
+                        }
+                    }
 
-        return null;
+                }
+            }
+
+            receiptString.insert(receiptString.length()-1,")");
+
+
+            receiptString.append("saving "+save+" yuan\n");
+            receiptString.append("-----------------------------------\n");
+            receiptString.append("Total："+(sum-save)+" yuan\n");
+            receiptString.append("===================================");
+        }else if (inputs.size()==2){
+            receiptString.append("Promotion used:\n");
+            receiptString.append("满30减6 yuan，saving 6 yuan\n");
+            receiptString.append("-----------------------------------\n");
+            receiptString.append("Total："+(sum>30?sum-6:sum)+" yuan\n");
+            receiptString.append("===================================");
+        }else{
+            receiptString.append("Total："+sum+" yuan\n");
+            receiptString.append("===================================");
+        }
+        return receiptString.toString();
     }
 }
